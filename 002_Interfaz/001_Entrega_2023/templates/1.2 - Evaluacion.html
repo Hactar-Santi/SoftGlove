@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+
+    <title>Evaluaci&oacute;n</title>
+
+
+   
+    <script >
+        // aqui voy a poner las predicciones
+        const pred = [];
+
+      
+      // boton busca info de EMG
+      $(function () {
+        /* el a#process me llama a mi boton*/
+
+        $("a#process_input2").bind("click", function () {
+          /*llamo a la funcion de python */
+
+          /* Las cosas de la muneca*/
+          referenciasMun = JSON.parse(localStorage.getItem("ParamRefMun"));
+          coeficientesMun = JSON.parse(localStorage.getItem("ScoreMun"));
+
+          canal1 = coeficientesMun[0];
+          canal2 = coeficientesMun[1];
+          a = coeficientesMun[2];
+          b = coeficientesMun[3];
+          c = coeficientesMun[4];
+          d = coeficientesMun[5];
+          e = coeficientesMun[6];
+          UmbralMun = coeficientesMun[7];
+
+          /*lo necesario de mano*/
+
+          referenciasMano = JSON.parse(localStorage.getItem("ParamRefMano"));
+          coeficientesMano = JSON.parse(
+            localStorage.getItem("ScoreMano")
+          );
+
+          canal1Mano = coeficientesMano[0];
+          canal2Mano = coeficientesMano[1];
+          aMano = coeficientesMano[2];
+          bMano = coeficientesMano[3];
+          cMano = coeficientesMano[4];
+          dMano = coeficientesMano[5];
+          eMano = coeficientesMano[6];
+          UmbralMano = coeficientesMano[7];
+
+   
+
+
+          $.getJSON(
+            "/_calculoScoreTesteo",
+            {
+              /*creo la variable para pasarle a python */
+              /* Para la muneca*/
+
+              canal1: canal1,
+              canal2: canal2,
+
+              a: a,
+              b: b,
+              c: c,
+              d: d,
+              e: e,
+
+              MAVref1: referenciasMun[0],
+              MAVref2: referenciasMun[1],
+
+              DIFref1: referenciasMun[2],
+              DIFref2: referenciasMun[3],
+
+              DAMVref1: referenciasMun[4],
+              DAMVref2: referenciasMun[5],
+
+              STDref1: referenciasMun[6],
+              STDref2: referenciasMun[7],
+
+              RMSref1: referenciasMun[8],
+              RMSref2: referenciasMun[9],
+
+              UmbralMun: UmbralMun,
+
+              /* Para la mano*/
+
+              canal1Mano: canal1Mano,
+              canal2Mano: canal2Mano,
+
+              aMano: aMano,
+              bMano: bMano,
+              cMano: cMano,
+              dMano: dMano,
+              eMano: eMano,
+
+              MAVref1Mano: referenciasMano[0],
+              MAVref2Mano: referenciasMano[1],
+
+              DIFref1Mano: referenciasMano[2],
+              DIFref2Mano: referenciasMano[3],
+
+              DAMVref1Mano: referenciasMano[4],
+              DAMVref2Mano: referenciasMano[5],
+
+              STDref1Mano: referenciasMano[6],
+              STDref2Mano: referenciasMano[7],
+
+              RMSref1Mano: referenciasMano[8],
+              RMSref2Mano: referenciasMano[9],
+
+              UmbralMano: UmbralMano,
+            },
+            function (data) {
+              /* esto es lo que me devuelve*/
+              
+
+
+            /* utilizo la informacion que viene de python*/
+
+              ScoreIndMano   = data.ScoreIndMano;
+              ScoreMaxMano = data.ScoreMaxMano;
+              desvioMano = data.desvioMano;
+             
+              ScoreIndMun   = data.ScoreIndMun;
+              ScoreMaxMun = data.ScoreMaxMun;
+              desvioMun = data.desvioMun;
+
+              EMG1 = data.EMG1;
+              EMG2 = data.EMG2;
+
+              tiempo = data.tiempo;
+
+
+              $("#scoreMano").text(ScoreMaxMano.toFixed(0));
+              $("#scoreMuneca").text(ScoreMaxMun.toFixed(0));
+              $("#umbralMano").text(UmbralMano);
+              $("#umbralMuneca").text(UmbralMun);
+
+              aperturaMano = document.getElementById("aperturaMano").checked;
+              cierreMano = document.getElementById("cierreMano").checked;
+              movMun = document.getElementById("movMun").checked;
+              movConj = document.getElementById("movConj").checked;
+
+              /*me fijo el valor real*/
+              if (aperturaMano == true) {
+                $("#seleccion").text("Reposo");
+                ValorReal = "AM";
+              } else if (cierreMano == true) {
+                $("#seleccion").text("Cierre mano");
+                ValorReal = "CM";
+              } else if (movMun == true) {
+                $("#seleccion").text("Movimiento muñeca");
+                ValorReal = "MM";
+              } else {
+                $("#seleccion").text("Movimiento conjunto");
+                ValorReal = "MC";
+              }
+
+              /*me fijo la prediccion*/
+              Pred = 'algo'
+                         
+              if (ScoreMaxMano >= UmbralMano && ScoreMaxMun >= UmbralMun) {
+                $("#decision").text("Movimiento conjunto");
+                Pred = "MC";
+              } else if (ScoreMaxMano >= UmbralMano && ScoreMaxMun < UmbralMun) {
+                $("#decision").text("Cierre mano");
+                Pred = "CM";
+              } else if (ScoreMaxMano < UmbralMano && ScoreMaxMun >= UmbralMun) {
+                $("#decision").text("Movimiento muñeca");
+                Pred = "MM";
+              } else if (ScoreMaxMano < UmbralMano && ScoreMaxMun < UmbralMun) {
+                $("#decision").text("Reposo");
+                Pred = "AM";
+              }
+              const a = [ValorReal, Pred];
+
+              pred.push(a);
+
+              actualizarGrafico2(tiempo,EMG1,EMG2,ScoreIndMano,ScoreIndMun,UmbralMano,UmbralMun)
+
+              localStorage.setItem("Predicciones", JSON.stringify(pred));
+
+              
+            }
+          );
+          return false;
+        });
+      });
+
+    </script>
+
+<script name="Para graficar">
+  const range = (start, stop, step) =>
+        Array.from(
+          { length: (stop - start) / step + 1 },
+          (_, i) => start + i * step
+        );
+
+      let T1 = range(0, 3, 3 / 120);
+      let t2 = range(0, 3, 3 / 120);
+      let T3 = range(0, 3, 3 / 120);
+      let t4 = range(0, 3, 3 / 120);
+  function graficar() {
+    //Creo las variables para graficas, esto se deberia hacer de otra forma
+    var trace1 = {
+          x: T1,
+          y: [],
+          type: "scatter",
+          name: "data",
+          yaxis: "y",
+          visibility: 'legendonly'
+        };
+
+        var trace2 = {
+          x: t2,
+          y: [],
+          type: "scatter",
+          name: "score1",
+          yaxis: "y2",
+          visibility: 'legendonly'
+
+        };
+
+        var layout = {
+          height: 320,
+          margin: {
+            l: 60,
+            r: 60,
+            t: 20,
+          },
+
+          paper_bgcolor: "#000000",
+          plot_bgcolor: "#000000",
+
+
+          yaxis: { title: "Amplitud ", range: [0, 1200] ,tickfont: {
+      family: 'Old Standard TT, serif',
+      linecolor: 'white',
+      size: 14,
+      color: 'white'
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } },
+          yaxis2: {
+            title: "Score",
+            overlaying: "y",
+            showline: true,
+            side: "right",
+            range: [0, 100],
+            tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } 
+          },
+          xaxis: { title: "Tiempo (s)", range: [0, 3],tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } , },
+  }
+        
+
+
+
+        var data = [trace1, trace2];
+
+        Plotly.newPlot('grafico', data, layout);}
+
+        function actualizarGrafico2(tiempo, EMG1, EMG2, ScoreIndMano,ScoreIndMun,UmbralMano,UmbralMun) {
+        var graphDiv = document.getElementById("grafico");
+        layout = graphDiv.layout;
+        //tomo de a 100 ms
+        ventana = 50;
+        //veo la cantidad de scores totales que necesito
+
+        //tomo scores del largo de la ventana
+      
+
+        var data1 = {
+          x: tiempo,
+          y: EMG1,
+          type: "scatter",
+          name: "Canal 1",
+          color: "#1fb8d0",
+          yaxis: "y",
+          visible: 'legendonly'
+
+        };
+
+        var data2 = {
+          x: tiempo,
+          y: EMG2,
+          type: "scatter",
+          name: "Canal 2",
+          visible: 'legendonly',
+          color: "salmon",
+          yaxis: "y"
+        };
+
+        datos = [];
+
+        datos = datos.concat(data1);
+        datos = datos.concat(data2);
+
+          var scoreMano1 = {
+            x: tiempo,
+            y: ScoreIndMano,
+            type: "scatter",
+            name: "Score Mano",
+            color: "red",
+            yaxis: "y2",
+          };
+          var scoreMun1 = {
+            x: tiempo,
+            y: ScoreIndMun,
+            type: "scatter",
+            name: "Score Muneca",
+            color: "blue",
+            yaxis: "y2",
+          };
+        datos = datos.concat(scoreMano1);
+        datos = datos.concat(scoreMun1);
+        
+        ElUmbralMano = new Array(tiempo.length).fill(UmbralMano);
+        ElUmbralMun = new Array(tiempo.length).fill(UmbralMun);
+
+        var umbralMano = {
+          x: tiempo,
+          y: ElUmbralMano,
+          type: "scatter",
+          name: "Umbral Mano",
+          yaxis: "y2",
+        }; 
+
+        var umbralMun = {
+          x: tiempo,
+          y: ElUmbralMun,
+          type: "scatter",
+          name: "Umbral Muneca",
+          yaxis: "y2",
+        }; 
+        datos = datos.concat(umbralMano);
+        datos = datos.concat(umbralMun);
+
+
+        Plotly.newPlot('grafico', datos, layout);
+      }
+</script>
+
+
+    <style>
+      body {
+        background-color: black;
+        font-family: Arial, sans-serif;
+        font-size: 2vh;
+
+      }
+
+      .Titulo {
+        text-align: center;
+        font-size: 6vh;
+        color: white;
+        border: 1px solid white;
+        margin-left: 30vh;
+        margin-right: 30vh;
+
+      }
+      .flex-container {
+        display: flex;
+        flex-flow: column;
+        align-content: center;
+        justify-content: center;
+        height: 97vh;
+        border: 1px solid white;
+      }
+
+      .flex-container-botones-finales {
+        display: flex;
+        justify-content: space-between;
+        align-content: space-between;
+      }
+      
+
+      h3 {
+        align-items: center;
+        justify-content: center;
+        margin: 1px;
+      }
+
+      .flexcont1 {
+        display: flex;
+        flex-flow: row;
+        margin: 5px;
+        height: 43vh;
+        justify-content: center;
+        align-content: center;
+
+
+
+      }
+
+      .flexcont2 {
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+        justify-content: center;
+
+
+      }
+
+      .flexRadioButton {
+        display: flex;
+        flex-flow: column;
+        height: 45vh;
+        align-items: space-around;
+        justify-content: space-around;
+        margin-left: 1vh;
+      }
+      .flex2 {
+        display: flex;
+        flex-flow: column;
+        align-items: space-around;
+    justify-content: space-around;
+        border: 1px solid white;
+        margin: 1vh;
+
+        width: 60vh;
+        height: 29.5vh;
+    padding: 1vh;
+      }
+
+      .flex-cuadro-texto1 {
+        display: flex;
+        flex-flow: column;
+        align-items: space-between;
+        justify-content: left;
+        height: 35vh;
+        width: 30vh;
+        border: 1px solid white;
+
+        margin: 1vh;
+      }
+
+      p {
+        width: 25vh;
+        margin: 0.5vh;
+
+      }
+
+      .p1{
+        width: 28vh;
+
+
+      }
+
+            .flex-cuadro-texto {
+        display: flex;
+        flex-flow: row;
+        align-items: center;
+        justify-content: left;
+
+      }
+
+
+
+      .Texto {
+        font-size: 2vh;
+        resize: none;
+        height: 29.5vh;
+
+      }
+
+      .Titulo2{
+        color: white;
+        text-align: center;
+
+      }
+
+      .p1{
+        color: white;
+      }
+
+      .Botones{
+        margin: 0.5vh;
+
+        font-size: 2vh;
+        align-items: space-around;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+      }
+
+      .Texto {
+        justify-content: right;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+        margin: 1vh;
+        padding: 1vh;
+
+
+
+      }
+
+      .Graf{
+        border: 1px solid white;
+        height: 35vh;
+        width:  100vh;
+        margin: 1vh;
+
+
+      }
+    </style>
+
+    <title>Evaluaci&oacute;n </title>
+  </head>
+  <body>
+    <div class="flex-container">
+      <h1 class="Titulo">Evaluaci&oacute;n</h1>
+      <div class="flexcont1">
+
+        <div class="flex-cuadro-texto1">
+          <h3 class="Titulo2">Movimiento deseado</h3>
+
+                      <!-- Cuadro movimiento deseado-->
+          <div class="flexRadioButton">
+            <div class="flex-cuadro-texto">
+              <input type="radio" name="radio" id="aperturaMano" checked /> 
+              <label for="aperturaMano"> <p class="p1"> Brazo relajado</p></label>
+            </div>
+
+            <div class="flex-cuadro-texto">
+              <input type="radio" name="radio" id="cierreMano" />
+              <label for="cierreMano"><p class="p1">Cierre mano</p></label>
+            </div>
+
+            <div class="flex-cuadro-texto">
+              <input type="radio" name="radio" id="movMun" />
+              <label for="movMun"><p class="p1">Extensi&oacute;n mu&ntilde;eca</p></label>
+            </div>
+
+            <div class="flex-cuadro-texto">
+              <input type="radio" name="radio" id="movConj" />
+              <label for="movConj"><p class="p1">Movimiento conjunto</p></label>
+            </div>
+            <div>
+              <a href="#" id="process_input2"><button class="Botones">Realizar movimiento</button></a>
+            </div>
+          </div>
+        </div>
+               
+                                      <!-- Cuadro grafico-->
+
+        <div class="flexgrafico" id="tester1">
+          <div class="Graf" id="grafico">
+            <!-- Plotly chart will be drawn inside this DIV -->
+            <script>
+              graficar();
+            </script>
+          </div>
+
+        </div>
+      </div>
+                                    <!-- Cuadro Text Area-->
+
+      <div class="flexcont2">
+        <div class="Cuadro_Texto">
+          <!-- Cuadro de texto -->
+          <textarea
+            class="Texto"
+            rows="10"
+            cols="80"
+            resize: none;
+            disabled="true"
+            id="Texto"
+          >
+En la pantalla evaluaci&oacute;n se busca conocer que tan buena fue la ecuaci&oacute;n lograda.
+
+En el recuadro bajo el t&iacute;tulo de movimiento deseado seleccione el movimiento que desea realizar y luego presione el bot&oacute;n 'Realizar movimiento'.
+
+Realice ese movimiento hasta que vea que se actualiza el gr&aacute;fico.
+              </textarea
+          >
+        </div>
+                       <!-- Cuadro scores-->
+
+                       <div class="flex2">
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Usted seleccion&oacute;:</p>
+                          <div>
+                            <p class="p1" id="seleccion" name="seleccion"></p>
+                          </div>
+                        </div>
+              
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Score Mano:</p>
+                          <div><p class="p1" id="scoreMano" name="scoreMano"></p></div>
+                        </div>
+              
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Umbral mano:</p>
+                          <div>
+                            <p class="p1" id="umbralMano" name="umbralMano"></p>
+                          </div>
+                        </div>
+              
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Score Mu&ntilde;eca:</p>
+                          <div><p class="p1" id="scoreMuneca" name="scoreMuneca"></p></div>
+                        </div>
+              
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Umbral mu&ntilde;eca:</p>
+                          <div>
+                            <p class="p1" id="umbralMuneca" name="umbralMuneca"></p>
+                          </div>
+                        </div>
+              
+                        <div class="flex-cuadro-texto">
+                          <p class="p1">Decisi&oacute;n:</p>
+                          <div>
+                            <p class="p1" id="decision" name="decision"></p>
+                          </div>
+                        </div>
+                      </div>
+      </div>
+      <div class="flex-container-botones-finales">
+        <a href="/EntrenamientoMun">
+          <button class="Botones">Volver</button>
+        </a>
+
+        <a href="/resumen">
+          <button class="Botones">Continuar</button>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
