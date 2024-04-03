@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.6.3.min.js"></script>
+
+    <title>Entrenamiento extensi&oacute;n de la mu&ntilde;eca</title>
+
+    <script>
+      // Tiempos que necesito
+      const range = (start, stop, step) =>
+        Array.from(
+          { length: (stop - start) / step + 1 },
+          (_, i) => start + i * step
+        );
+
+      let T1 = range(0, 3, 3 / 120);
+      let t2 = range(0, 3, 3 / 120);
+      let T3 = range(0, 3, 3 / 120);
+      let t4 = range(0, 3, 3 / 120);
+
+      // inicializo cosas
+      const parcon = []; //con movimiento
+      const canal1con = [];
+      const canal2con = [];
+
+      const parsin = []; //sin movimiento
+      const canal1sin = [];
+      const canal2sin = [];
+
+      // Funcion para guardar datos
+      //guardo los datos en memoria segun sea con movimiento o sin movimiento
+
+      function guardarDatosDeAca(EMG1, EMG2, parametros, tipo) {
+        if (tipo == 1) {
+          parcon.push(parametros);
+          canal1con.push(EMG1);
+          canal2con.push(EMG2);
+        } else if (tipo == 2) {
+          parsin.push(parametros);
+          canal1sin.push(EMG1);
+          canal2sin.push(EMG2);
+        }
+      }
+
+      //Actualizo los datos del grafico
+      function actualizarGrafico(opcion, tiempos, EMG1, EMG2) {
+        var graphDiv = document.getElementById("grafico");
+        layout = graphDiv.layout;
+
+        ventana = 100;
+        //veo la cantidad de scores totales que necesito
+        p = parseInt(EMG1.length / ventana);
+        tiempos1 = med = [];
+
+        //tomo scores del largo de la ventana
+
+        if (opcion == 0) {
+          var dataNueva1 = {
+            x: tiempos,
+            y: EMG1,
+            type: "scatter",
+            name: "Canal 1 (Cierre)",
+            color: "#1fb8d0",
+          };
+
+          var dataNueva2 = {
+            x: tiempos,
+            y: EMG2,
+            type: "scatter",
+            name: "Canal 2 (Cierre)",
+            color: "salmon",
+          };
+
+          datosViejos = graphDiv.data;
+          datosViejos[0] = dataNueva1;
+          datosViejos[1] = dataNueva2;
+        } else if (opcion == 1) {
+          var dataNueva1 = {
+            x: tiempos,
+            y: EMG1,
+            type: "scatter",
+            name: "Canal 1 (Apertura)",
+            color: "#1fb8d0",
+          };
+
+          var dataNueva2 = {
+            x: tiempos,
+            y: EMG2,
+            type: "scatter",
+            name: "Canal 2 (Apertura)",
+            color: "salmon",
+          };
+
+          datosViejos = graphDiv.data;
+          datosViejos[3] = dataNueva1;
+          datosViejos[4] = dataNueva2;
+        }
+        Plotly.newPlot(graphDiv, datosViejos, layout);
+      }
+      function Continuar(){
+        referencias_mun = JSON.parse(localStorage.getItem("ParamRefMun"));
+
+        
+
+
+        canal1 = document.getElementById("canal1").checked;
+        canal2 = document.getElementById("canal2").checked;
+        a = parseInt(document.getElementById("MAV").value);
+        b = parseInt(document.getElementById("DIF").value);
+        c = parseInt(document.getElementById("DAMV").value);
+        d = parseInt(document.getElementById("STD").value);
+        e = parseInt(document.getElementById("RMS").value);
+        Umbral = parseInt(document.getElementById("Umbral").value);
+
+        console.log(canal1)
+
+
+        if (canal1 == true){
+          canal1 = 1;
+          canal2 = 0;
+        }else{
+            canal1 = 0;
+            canal2 = 1;
+        }
+
+        console.log(canal1)
+
+
+
+        coeficientes = [canal1, canal2, a, b, c, d, e, Umbral];
+
+
+        localStorage.setItem("ScoreMun", JSON.stringify(coeficientes));
+      }
+      function limpiarGrafico() {
+        var graphDiv = document.getElementById("grafico");
+        var trace1 = {
+          x: T1,
+          y: [],
+          type: "scatter",
+          name: "data",
+          yaxis: "y",
+          color: '#4B4B4B',
+        };
+
+        var trace2 = {
+          x: t2,
+          y: [],
+          type: "scatter",
+          name: "score1",
+          yaxis: "y2",
+        };
+
+        var layout = {
+          height: 400,
+          margin: {
+            l: 60,
+            r: 60,
+            t: 20,
+          },
+
+          paper_bgcolor: "#000000",
+          plot_bgcolor: "#000000",
+
+
+          yaxis: { title: "Amplitud ", range: [0, 1200] ,tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } },
+          yaxis2: {
+            title: "Score",
+            overlaying: "y",
+            showline: true,
+            side: "right",
+            range: [0, 100],
+            tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } 
+          },
+          xaxis: { title: "Tiempo (s)", range: [0, 3],tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } , },
+        };
+
+        var data = [trace1, trace2];
+
+        Plotly.newPlot(graphDiv, data, layout);
+      }
+
+      //Actualizo los valores de la tabla sin movimiento (apertura)
+      function actualizarEstadisticoEnTablaSinMov(
+        media1,
+        media2,
+        nombre,
+        mediaMov1,
+        mediaMov2
+      ) {
+        document.getElementById(nombre + "1sinmovmed").innerHTML = media1;
+        document.getElementById(nombre + "2sinmovmed").innerHTML = media2;
+
+        /*diferencia*/
+
+        diferencia1 = Math.abs(
+          (Math.abs(mediaMov1 - media1) / media1) * 100
+        ).toFixed(0);
+        diferencia2 = Math.abs(
+          (Math.abs(mediaMov2 - media2) / media2) * 100
+        ).toFixed(0);
+        if (media1 == 0) {
+          diferencia1 = 0;
+        }
+        if (media2 == 0) {
+          diferencia2 = 0;
+        }
+        document.getElementById(nombre + "1diff").innerHTML =
+          diferencia1 + " %";
+
+        document.getElementById(nombre + "2diff").innerHTML =
+          diferencia2 + " %";
+
+        if (diferencia1 > 600) {
+          document.getElementById(nombre + "1diff").style.backgroundColor =
+            "green";
+        }
+
+        if (diferencia2 > 600) {
+          document.getElementById(nombre + "2diff").style.backgroundColor =
+            "green";
+        }
+      }
+
+      //Actualizo los valores de la tabla con movimiento (cierre)
+      function actualizarEstadisticoEnTablaConMov(media1, media2, nombre) {
+        document.getElementById(nombre + "1movmed").innerHTML = media1;
+        document.getElementById(nombre + "2movmed").innerHTML = media2;
+      }
+
+      //en general para actualizar la tabla, le paso 1 o 2 segun sea con o sin movimiento
+      function actualizarTabla(parametros, tipo) {
+        if (tipo == 2) {
+          conMov = parcon[0];
+
+          /* caso apertura*/
+          mav = parametros[0];
+          mavRef = conMov[0];
+          actualizarEstadisticoEnTablaSinMov(
+            mav[1],
+            mav[4],
+            "mav",
+            mavRef[1],
+            mavRef[4]
+          );
+
+          DIF = parametros[1];
+          DIFRef = conMov[1];
+          actualizarEstadisticoEnTablaSinMov(
+            DIF[1],
+            DIF[4],
+            "DIF",
+            DIFRef[1],
+            DIFRef[4]
+          );
+
+          DAMV = parametros[2];
+          DAMVRef = conMov[2];
+          actualizarEstadisticoEnTablaSinMov(
+            DAMV[1],
+            DAMV[4],
+            "DAMV",
+            DAMVRef[1],
+            DAMVRef[4]
+          );
+
+          STD = parametros[3];
+          STDRef = conMov[3];
+          actualizarEstadisticoEnTablaSinMov(
+            STD[1],
+            STD[4],
+            "STD",
+            STDRef[1],
+            STDRef[4]
+          );
+
+          RMS = parametros[4];
+          RMSRef = conMov[4];
+          actualizarEstadisticoEnTablaSinMov(
+            RMS[1],
+            RMS[4],
+            "RMS",
+            RMSRef[1],
+            RMSRef[4]
+          );
+        } else if (tipo == 1) {
+          /* caso cierre*/
+
+          mav = parametros[0];
+          actualizarEstadisticoEnTablaConMov(mav[1], mav[4], "mav");
+          DIF = parametros[1];
+          actualizarEstadisticoEnTablaConMov(DIF[1], DIF[4], "DIF");
+          DAMV = parametros[2];
+          actualizarEstadisticoEnTablaConMov(DAMV[1], DAMV[4], "DAMV");
+          STD = parametros[3];
+          actualizarEstadisticoEnTablaConMov(STD[1], STD[4], "STD");
+          RMS = parametros[4];
+          actualizarEstadisticoEnTablaConMov(RMS[1], RMS[4], "RMS");
+        }
+      }
+
+      function botonCerrar() {
+        /*llamo a la funcion de python */
+        $.getJSON("/_dataCierre", {}, function (data) {
+          let mav = data.mav;
+          let DIF = data.DIF;
+          let DAMV = data.DAMV;
+          let STD = data.STD;
+          let RMS = data.RMS;
+
+          parametros = [mav, DIF, DAMV, STD, RMS];
+
+          let tiempo = data.tiempo;
+          let EMG1 = data.EMG1;
+          let EMG2 = data.EMG2;
+
+          actualizarGrafico(0, tiempo, EMG1, EMG2);
+
+          actualizarTabla(parametros, 1);
+
+          guardarDatosDeAca(EMG1, EMG2, parametros, 1);
+
+          /*guardo los parametros de referencia unicamente*/
+
+          parametros = [
+            mav[1],
+            mav[4],
+            DIF[1],
+            DIF[4],
+            DAMV[1],
+            DAMV[4],
+            STD[1],
+            STD[4],
+            RMS[1],
+            RMS[4],
+          ];
+
+          localStorage.setItem("ParamRefMun", JSON.stringify(parametros));
+        });
+        return false;
+      }
+
+      // Codigo para pasar de pantalla en el text area
+
+      // Segun la funcion es el texto que muestra
+      var numero = 0;
+      function func1() {
+        document.getElementById("Texto").innerHTML =
+          "Comencemos con la extensi&oacute;n de la mu&ntilde;eca.\n \nPresione seguir y luego flexione y extienda la mu&ntilde;eca repetidamente hasta que vea que el gr&aacute;fico se actualice";
+      }
+
+      function func2() {
+        document.getElementById("Texto").innerHTML =
+          "Espere a que se carguen los datos del gr&aacute;fico. \n \nRecuerde que puede consultar el FAQ para tener mas informaci&oacute;n de como interpretar el gr&aacute;fico y la tabla. \n \nUna vez que se carguen, verifique que los datos sean los correctos, de ser as&iacute; presione seguir.";
+        botonCerrar();
+      }
+
+      function func3() {
+        document.getElementById("Texto").innerHTML =
+          "Sigamos con el registro en relajaci&oacute;n.\n \nPara ello deje la mano quieta y luego presione seguir.";
+        document.getElementById("CuadroResultados").style.visibility = "hidden";
+      }
+
+      function func4() {
+        document.getElementById("Texto").innerHTML =
+          "Espere a que se carguen los datos del gr&aacute;fico. \n\nUna vez que se carguen, verifique que los datos sean los correctos, de ser as&iacute; presione seguir.";
+        botonApertura();
+      }
+
+      function func5() {
+        document.getElementById("Texto").innerHTML =
+          "El siguiente paso es elegir los valores para realizar el movimiento. \n \nPara ello debe asignarle un peso a cada variable (entre 0 y 100) y seleccionar el canal que desea utilizar. Tenga en cuenta que la suma de todos los pesos debe ser 100. \n\nEs &uacute;til observar en la tabla aquellas variables cuya diferencia media est&eacute; en verde. \n\nUna vez que haya seleccionado el peso de cada variable presione el boton 'Probar ecuaci&oacute;n' y realice un movimiento. \n\nSe le indicar&aacute; el puntaje y la decisi&oacute;n obtenida.\n\n Modifique el peso de cada variable hasta que este conforme y luego presione 'Continuar'";
+        document.getElementById("CuadroResultados").style.visibility =
+          "visible";
+        limpiarGrafico();
+      }
+
+      function Seguir() {
+        numero += 1;
+        SelecFun(numero);
+        if (numero > 5) {
+          numero = 5;
+        }
+      }
+
+      function Volver() {
+        if (numero == 5) {
+          alert("Debe reiniciar la pagina para volver a tomar los datos");
+        } else {
+          numero -= 1;
+        }
+        if (numero < 1) {
+          numero = 0;
+          document.getElementById("Texto").innerHTML =
+            "Bienvenido a la pantalla de entrenamiento. \n \nEn cualquier momento puede presionar FAQ para conocer m&aacute;s en detalle las variables de la tabla, preguntas usuales y otra informaci&oacute;n &uacute;til. \n \nPresione seguir para continuar.";
+        }
+        SelecFun(numero);
+      }
+
+      function SelecFun() {
+        switch (numero) {
+          case 1:
+            func1();
+            break;
+          case 2:
+            func2();
+            break;
+          case 3:
+            func3();
+            break;
+          case 4:
+            func4();
+            break;
+          case 5:
+            func5();
+            break;
+          case 6:
+            func6();
+            break;
+        }
+      }
+
+      // Para el caso apertura
+      function botonApertura() {
+        /*llamo a la funcion de python */
+        $.getJSON("/_dataApertura", {}, function (data) {
+          let mav = data.mav;
+          let DIF = data.DIF;
+          let DAMV = data.DAMV;
+          let STD = data.STD;
+          let RMS = data.RMS;
+
+          let tiempo = data.tiempo;
+          let EMG1 = data.EMG1;
+          let EMG2 = data.EMG2;
+
+          parametros = [mav, DIF, DAMV, STD, RMS];
+
+          actualizarGrafico(1, tiempo, EMG1, EMG2);
+          actualizarTabla(parametros, 2);
+        });
+        return false;
+      }
+
+      // Submit esto puede volar
+
+      function actualizarGrafico2(tiempo, EMG1, EMG2, umbral, scoreIndividual) {
+        var graphDiv = document.getElementById("grafico");
+        layout = graphDiv.layout;
+        //tomo de a 100 ms
+        ventana = 100;
+        //veo la cantidad de scores totales que necesito
+
+        //tomo scores del largo de la ventana
+
+        ElUmbral = new Array(tiempo.length).fill(umbral);
+
+        var data1 = {
+          x: tiempo,
+          y: EMG1,
+          type: "scatter",
+          name: "Canal 1",
+          color: "#1fb8d0",
+          yaxis: "y",
+        };
+
+        var data2 = {
+          x: tiempo,
+          y: EMG2,
+          type: "scatter",
+          name: "Canal 2",
+          color: "salmon",
+          yaxis: "y",
+        };
+
+        datos = [];
+
+        datos = datos.concat(data1);
+        datos = datos.concat(data2);
+
+        var score1 = {
+          x: tiempo,
+          y: scoreIndividual,
+          type: "scatter",
+          name: "score",
+          yaxis: "y2",
+        };
+
+        var umbral = {
+          x: tiempo,
+          y: ElUmbral,
+          type: "scatter",
+          name: "Umbral",
+          yaxis: "y2",
+        };
+
+        datos = datos.concat(score1);
+        datos = datos.concat(umbral);
+        console.log(score1);
+
+        Plotly.newPlot(graphDiv, datos, layout);
+      }
+
+      // Del boton 'Tomar Data'
+      function PruebaEc() {
+        /*llamo a la funcion de python */
+
+        console.log("aknbdfkjbskjb");
+
+        referencias_mun = JSON.parse(localStorage.getItem("ParamRefMun"));
+        canal1 = document.getElementById("canal1").checked;
+        canal2 = document.getElementById("canal2").checked;
+        a = parseInt(document.getElementById("MAV").value);
+        b = parseInt(document.getElementById("DIF").value);
+        c = parseInt(document.getElementById("DAMV").value);
+        d = parseInt(document.getElementById("STD").value);
+        e = parseInt(document.getElementById("RMS").value);
+        Umbral = parseInt(document.getElementById("Umbral").value);
+
+        if (canal1 == true){
+          canal1 = 1;
+          canal2 = 0;
+        }else{
+            canal1 = 0;
+            canal2 = 1;
+        }
+
+        if (a + b + c + d + e != 100) {
+          alert("Los pesos no suman 100");
+          console.log("che no suma 100");
+          return;
+        }
+
+        if (canal1 == 1 || canal1 == 0) {
+        } else {
+          alert("El valor del canal 1 debe ser 0 o 1");
+          return;
+        }
+
+        if (canal2 == 1 || canal2 == 0) {
+        } else {
+          alert("El valor del canal 2 debe ser 0 o 1");
+          return;
+        }
+
+        if (canal1 + canal2 != 1) {
+          alert("Selecciono mas de un canal");
+          return;
+        }
+
+        $.getJSON(
+          "/_calculoScore",
+          {
+            /*creo la variable para pasarle a python */
+
+            canal1: canal1,
+            canal2: canal2,
+
+            a: a,
+            b: b,
+            c: c,
+            d: d,
+            e: e,
+
+            MAVref1: referencias_mun[0],
+            MAVref2: referencias_mun[1],
+
+            DIFref1: referencias_mun[2],
+            DIFref2: referencias_mun[3],
+
+            DAMVref1: referencias_mun[4],
+            DAMVref2: referencias_mun[5],
+
+            STDref1: referencias_mun[6],
+            STDref2: referencias_mun[7],
+
+            RMSref1: referencias_mun[8],
+            RMSref2: referencias_mun[9],
+
+            Umbral: Umbral,
+          },
+          function (data) {
+            console.log(data);
+
+            /* esto es lo que me devuelve*/
+
+            console.log("hola");
+
+            scoreIndividual = data.ecuacion_mano;
+            scoreProm = data.prom_ecuaciones;
+            desvio = data.desvio;
+
+            EMG1 = data.EMG1;
+            EMG2 = data.EMG2;
+
+            tiempo = data.tiempo;
+
+            /* utilizo la informacion que viene de python*/
+
+            Umbral = parseFloat(document.getElementById("Umbral").value);
+
+            coeficientes = [canal1, canal2, a, b, c, d, e, Umbral];
+
+            localStorage.setItem("ScoreMun", JSON.stringify(coeficientes));
+
+            $("#cuadroScore").text(scoreProm.toFixed(0));
+            $("#cuadroUmbral").text(Umbral.toFixed(0));
+
+            actualizarGrafico2(tiempo, EMG1, EMG2, Umbral, scoreIndividual);
+
+            if (scoreProm >= Umbral) {
+              $("#cuadroDecision").text("Extension Muneca");
+            } else {
+              $("#cuadroDecision").text("Mano quieta");
+            }
+          }
+        );
+        return false;
+      }
+
+      // Esto es para el pop up
+      function openForm() {
+        document.getElementById("myForm").style.display = "block";
+      }
+
+      function closeForm() {
+        document.getElementById("myForm").style.display = "none";
+      }
+
+      function openInfo() {
+        document.getElementById("divVariable").style.visibility = "visible";
+
+        document.getElementById("divVariable").style.height = "auto";
+        document.getElementById("pVariable").style.visibility = "visible";
+
+        document.getElementById("pVariable").style.height = "auto";
+
+        document.getElementById("pVariable").innerText =
+          " 1. MAV:calcula el promedio de las ultimas 100 muestras. \n \n 2. DIF: Calcula la diferencia entre el promedio de ambos canales. \n \n 3. DAMV: diferencia media absoluta. &Gamma \n \n 4. STD: Valor absoluto integrado. \n \n 5. RMS: Largo fractal maximo.";
+      }
+
+      function closeInfo() {
+        document.getElementById("pVariable").style.visibility = "hidden";
+        document.getElementById("pVariable").style.height = "1px";
+        document.getElementById("divVariable").style.visibility = "hidden";
+        document.getElementById("divVariable").style.height = "1px";
+      }
+    </script>
+
+    <script name="Para graficar">
+      function graficar() {
+        //Creo las variables para graficas, esto se deberia hacer de otra forma
+        var curva1 = {
+          x: T1,
+          y: [],
+          type: "scatter",
+          name: "data",
+        };
+
+        var curva2 = {
+          x: t2,
+          y: [],
+          type: "scatter",
+          name: "score1",
+        };
+
+        var curva3 = {
+          x: T3,
+          y: [],
+          type: "scatter",
+          name: "score3",
+        };
+
+        var curva4 = {
+          x: t4,
+          y: [],
+          type: "scatter",
+          name: "score4",
+        };
+
+        // prpiedades de la tabla
+        var layout = {
+          legend: {
+            x: 1,
+            xanchor: "right",
+            y: 1,
+          },
+
+          height: 400,
+
+     
+          margin: {
+            l: 60,
+            r: 60,
+            t: 20,
+          },
+          paper_bgcolor: "#000000",
+          plot_bgcolor: "#000000",
+
+          xaxis: {         automargin: true,
+title: "Tiempo (s)", range: [0, 3],tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    }, titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    } , },
+
+          yaxis: {         automargin: true,
+title: "Amplitud ", range: [0, 1200] ,tickfont: {
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    
+    },titlefont:{
+      family: 'Old Standard TT, serif',
+      size: 14,
+      color: 'white'
+    }},
+        };
+
+        // hago una variable con las 4 curvas
+        var data = [curva1, curva2, curva3, curva4];
+
+        //hago el grafico
+        Plotly.newPlot("grafico", data, layout);
+      }
+
+      function openForm() {
+        document.getElementById("FAQ").style.display = "block";
+        document.getElementById("FAQ").style.animation = "fadeIn 1s";
+      }
+
+      function closeForm() {
+        document.getElementById("FAQ").style.display = "none";
+        document.getElementById("FAQ").style.animation = "fadeOut 1s";
+      }
+    </script>
+
+    <style>
+      .Variables {
+        display: flex;
+        flex-flow: column;
+        border: 1px solid gold;
+      }
+      .BotonContraer {
+        display: flex;
+        flex-flow: row;
+        border: 1px solid red;
+      }
+
+      .divVariable {
+        visibility: hidden;
+        border: 1px solid violet;
+      }
+      body {
+        background-color: black;
+        font-family: Arial, sans-serif;
+        font-size: 2vh;
+
+      }
+
+      .Titulo {
+        text-align: center;
+        font-size: 6vh;
+        color: white;
+        border: 1px solid white;
+        margin-left: 30vh;
+        margin-right: 30vh;
+
+      }
+      .Contenedor {
+        display: flex;
+        flex-flow: column;
+        align-content: space-between;
+        justify-content: space-between;
+        height: 97vh;
+        border: 1px solid white;
+      }
+
+      .Contenedor-botones-finales {
+        display: flex;
+        justify-content: space-between;
+        align-content: space-between;
+        margin: 5px;
+      }
+
+      .Cuadro_Texto {
+        display: flex;
+        flex-flow: column;
+        border: 0px solid green;
+      }
+
+      /* Cuadro que va en la tabla*/
+      .Cuadro-Tabla {
+        display: flex;
+        flex-flow: column;
+        justify-content: center;
+        align-items: center;
+        height: 45vh;
+        width: 80vh;
+        margin: 1vh;
+
+        /*border: 10px solid black;*/
+      }
+      /*Contenedor primer nivel, separa tabla y
+grafico de cuadro texto-botones*/
+      .flex1 {
+        display: flex;
+        flex-flow: row;
+        border: 1px solid black;
+        align-items: space-around;
+        justify-content: space-around;
+        margin: 2px;
+      }
+
+      .flexScroll {
+        height: 30vh;
+        align-items: space-between;
+        justify-content: space-between;
+        width: 80vh;
+        border: 1px solid white;
+
+        
+      }
+
+      .flex-cuadro-texto1 {
+        display: flex;
+        flex-flow: row;
+        margin: 7px;
+        align-items: space-between;
+        justify-content: left;
+        color: white;
+
+        /*border: 1px solid gold;*/
+      }
+
+      .flexdosbotones {
+        display: flex;
+        flex-flow: row;
+        margin: 1 px;
+        align-items: space-between;
+        justify-content: left;
+        
+      }
+
+
+      .Botones{
+        margin: 0.5vh;
+
+        font-size: 2vh;
+        align-items: space-around;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+      }
+
+      .CuadroTexto {
+        justify-content: right;
+        width: 10vh;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+
+      }
+
+      p {
+        width: 10vh;
+        margin: 2px;
+        margin-left: 4px;
+        /*border: 1px solid blue;*/
+      }
+      .pRes {
+        text-align: center;
+        width: 40vh;
+      }
+
+      .pScore {
+        margin-left: 20px;
+        width: 13vh;
+      }
+      .p1 {
+        width: 12vh;
+        margin: 2px;
+      }
+
+      .p2 {
+        width: 25vh;
+        margin: 2px;
+        height: 3vh;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid gold;
+
+      }
+
+      .flex23 {
+        display: flex;
+        flex-flow: column;
+        margin: 1px;
+        align-items: space-around;
+        justify-content: space-around;
+        border: 1px solid black;
+        height: 28vh;
+        visibility: hidden;
+      }
+
+      table {
+        height: 50vh;
+        border: 1px solid gold;
+
+      }
+      /* Todo esto es para la tabla*/
+      table.greyGridTable {
+        border: 2px solid white;
+        width: 70vh;
+        text-align: center;
+        border-collapse: collapse;
+      }
+      table.greyGridTable td {
+        border: 1px solid white;
+        padding: 1px 2px;
+        font-family: Arial, sans-serif;
+      }
+      table.greyGridTable th {
+        border: 1px solid white;
+        padding: 1px 2px;
+        font-family: Arial, sans-serif;
+        color: white;
+
+      }
+      table.greyGridTable tbody td {
+        font-size: 2vh;
+        color: white;
+
+      }
+      table.greyGridTable tr:nth-child(even) {
+        background: black;
+        color: white;
+
+      }
+      table.greyGridTable thead {
+        background: black;
+        color: white;
+
+        border-bottom: 2px solid white;
+      }
+      table.greyGridTable thead th {
+        font-size: 2vh;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        border-left: 1px solid white;
+      }
+      table.greyGridTable thead th:first-child {
+        border-left: none;
+      }
+
+      table.greyGridTable tfoot td {
+        font-size: 2vh;
+      }
+
+      .flexgrafico{
+      width: 80vh;
+      height: 45vh;
+      margin: 1vh;  
+      border: 1px solid white;
+
+
+      }
+
+      .canal1 {
+        background-color: #00505e;
+      }
+
+      .canal2 {
+        background-color: #8f0062;
+      }
+
+      .form-popup {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        right: 15px;
+        border: 3px solid #f1f1f1;
+        z-index: 9;
+      }
+
+      /* Add styles to the form container */
+      .form-container {
+        max-width: 300px;
+        padding: 10px;
+        background-color: white;
+      }
+
+      /* Full-width input fields */
+
+      /* When the inputs get focus, do something */
+
+      /* Set a style for the submit/login button */
+      .form-container .btn {
+        background-color: #04aa6d;
+        color: white;
+        padding: 16px 20px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        opacity: 0.8;
+      }
+
+      /* Add a red background color to the cancel button */
+      .form-container .cancel {
+        background-color: red;
+      }
+
+      .faq-container {
+        max-height: 100%;
+        overflow: auto;
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        width: 400px;
+        bottom: 15px;
+        right: 15px;
+        border-radius: 8px;
+        border: 1px solid black;
+      }
+
+      .faq-title-container {
+        display: flex;
+        justify-content: center;
+      }
+
+      .faq-title {
+        font-size: 25px;
+        margin: 15px 0px;
+      }
+
+      .faq-content {
+        font-weight: normal;
+        font-style: Arial;
+        border: 1px dotted black;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      .faq-question-container {
+        margin: 10px 5px;
+      }
+
+      .faq-question-title {
+        /* list-style: none;*/
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .faq-question-title2 {
+        /* list-style: none;*/
+        font-size: 13px;
+        margin-left: 5px;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .Texto {
+        font-size: 2vh;
+        resize: none;
+        margin: 0.5vh;
+        border: 1px solid white;
+        padding: 1vh;
+        color: white;
+        background-color: black;
+      }
+      .PCanal{
+        width: 17vh;
+        margin-right: 2vh;
+        height: 3vh;
+
+
+      }
+
+      .PCanal1{
+        width: 3vh;
+        margin-left: 1vh;
+        align-items: center;
+        justify-content: center;
+        height: 3vh;
+      }
+      .PCanal2{
+        width: 3vh;
+        margin-left: 1vh;
+        align-items: center;
+        justify-content: center;
+        height: 3vh;
+      }
+
+      .DivCanal12{
+        display: flex;
+        flex-flow: row;
+        margin-left: 1.5vh;
+        margin-right: 1.5vh;
+        border: 1px solid white;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5vh;
+
+
+      }
+
+      .Estadisticos{
+        width: 12vh;
+        height: 4vh;
+
+
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Primera division -->
+    <div class="Contenedor">
+      <h1 class="Titulo">Entrenamiento extensi&oacute;n mu&ntilde;eca</h1>
+
+      <!-- Separo tabla-grafico de xuadro texto-boton -->
+      <div class="flex1">
+        <div class="Cuadro-Tabla">
+          <!-- La tabla-->
+          <table class="greyGridTable">
+            <thead>
+              <tr>
+                <th></th>
+                <th class="canal1" colspan="3">Canal 1</th>
+                <th class="canal2" colspan="3">Canal 2</th>
+              </tr>
+
+              <tr>
+                <th></th>
+                <th class="canal1" colspan="1">M&aacute;ximo movimiento</th>
+                <th class="canal1" colspan="1">
+                  M&aacute;ximo relajaci&oacute;n
+                </th>
+                <th class="canal1" colspan="1">Diferencia</th>
+                <th class="canal2" colspan="1">M&aacute;ximo movimiento</th>
+                <th class="canal2" colspan="1">
+                  M&aacute;ximo relajaci&oacute;n
+                </th>
+                <th class="canal2" colspan="1">Diferencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th>MAV</th>
+                <td id="mav1movmed"></td>
+                <td id="mav1sinmovmed"></td>
+                <td id="mav1diff"></td>
+                <td id="mav2movmed"></td>
+                <td id="mav2sinmovmed"></td>
+                <td id="mav2diff"></td>
+              </tr>
+
+              <tr>
+                <th>DIF</th>
+                <td id="DIF1movmed"></td>
+                <td id="DIF1sinmovmed"></td>
+                <td id="DIF1diff"></td>
+                <td id="DIF2movmed"></td>
+                <td id="DIF2sinmovmed"></td>
+                <td id="DIF2diff"></td>
+              </tr>
+
+              <tr>
+                <th>DAMV</th>
+                <td id="DAMV1movmed"></td>
+                <td id="DAMV1sinmovmed"></td>
+                <td id="DAMV1diff"></td>
+                <td id="DAMV2movmed"></td>
+                <td id="DAMV2sinmovmed"></td>
+                <td id="DAMV2diff"></td>
+              </tr>
+
+              <tr>
+                <th>STD</th>
+                <td id="STD1movmed"></td>
+                <td id="STD1sinmovmed"></td>
+                <td id="STD1diff"></td>
+                <td id="STD2movmed"></td>
+                <td id="STD2sinmovmed"></td>
+                <td id="STD2diff"></td>
+              </tr>
+
+              <tr>
+                <th>RMS</th>
+                <td id="RMS1movmed"></td>
+                <td id="RMS1sinmovmed"></td>
+                <td id="RMS1diff"></td>
+                <td id="RMS2movmed"></td>
+                <td id="RMS2sinmovmed"></td>
+                <td id="RMS2diff"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flexgrafico">
+          <div id="grafico">
+            <!-- Plotly chart will be drawn inside this DIV -->
+            <script>
+              graficar();
+            </script>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ahora me meto con el cuadro de texto y botones -->
+      <div class="flex1">
+        <div class="Cuadro_Texto">
+          <!-- Cuadro de texto -->
+          <textarea class="Texto" rows="9" cols="70" disabled="true" id="Texto">
+Bienvenido a la pantalla de entrenamiento. 
+
+En cualquier momento puede presionar FAQ para conocer m&aacute;s en detalle las variables de la tabla, preguntas usuales y otra informaci&oacute;n &uacute;til. 
+
+Presione seguir para continuar.
+
+              </textarea
+          >
+          <!-- Botones -->
+          <div class="flexdosbotones">
+            <button class="Botones" onClick="Volver()">Volver</button>
+            <button class="Botones" onClick="Seguir()">Seguir</button>
+            <button class="Botones" onclick="openForm()">FAQ</button>
+
+            <!-- Comienzo FAQ -->
+            <div class="faq-container" id="FAQ">
+              <div class="faq-title-container">
+                <h1 class="faq-title">FAQ</h1>
+              </div>
+              <hr style="margin: 0" />
+              <details class="faq-question-container" name="VARIABLES">
+                <summary class="faq-question-title">
+                  Qu&eacute; representan las variables de la tabla?
+                </summary>
+                <div>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">MAV</summary>
+                    <h5 class="faq-content">
+                      El Valor absoluto medio o MAV es el promedio de la
+                      &uacute;ltimas 100 muestras. Se calcula de la siguiente
+                      forma:
+                      <br />
+                      <br />
+                      MAV = &Sigma; (x<sub>i</sub>)/N
+                      <br />
+                      Donde N es el n&uacute;mero de muestras (100).
+                    </h5>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">DIF</summary>
+                    <div>
+                      <h5 class="faq-content">
+                        La diferencia entre canales o DIF es una m&eacute;trica
+                        creada por nosotros. <br />
+                        <br />
+                        Busca cuantizar la diferencia que hay entre un canal y
+                        otro en todo momento, dado que esta diferencia aumenta
+                        al realizar un movimiento. <br />
+                        <br />
+
+                        Se calcula como: <br />
+                        DIF = &Sigma; (x<sub>1<sub>i</sub></sub> - x<sub
+                          >2<sub>i</sub></sub
+                        >)/N
+
+                        <br /><br />
+
+                        Donde x<sub>1</sub> es la informaci&oacute;n del primer
+                        canal, x<sub>2</sub> es la del segundo y N es el
+                        n&uacute;mero de muestras (100). Por lo tanto, el DIF
+                        puede ser positivo o negativo.
+                      </h5>
+                    </div>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">DAMV</summary>
+                    <div>
+                      <h5 class="faq-content">
+                        La diferencia absoluta valor medio o DAMV se calcula de
+                        la siguiente forma:
+                        <br />
+                        <br />
+
+                        DAMV = &Sigma; (x<sub>i + 1</sub> - x<sub>i</sub>)/N
+                        <br />
+                        <br />
+
+                        Donde N es el n&uacute;mero de muestras (100).
+                      </h5>
+                    </div>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">STD</summary>
+                    <div>
+                      <h5 class="faq-content">
+                        El desvió estándar o STD es una medida que se utiliza
+                        para cuantificar la variación o la dispersión de un
+                        conjunto de datos numéricos.
+                        <br />
+                        <br />
+                        Se calcula como:
+                        <br />
+                        STD = √
+                        <sup>
+                          &Sigma; (x<sub>i</sub> - x<sub>promedio</sub>)<sup>
+                            2</sup
+                          >
+                        </sup>
+                        / <sub>N-1</sub>
+                        <br />
+                        <br />
+                        Donde x<sub>promedio</sub> es el valor promedio del
+                        total de muestras y N es el n&uacute;mero de muestras
+                        (100).
+                      </h5>
+                    </div>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">RMS</summary>
+                    <div>
+                      <h5 class="faq-content">
+                        El valor cuadrático medio o RMS es una medida
+                        estadística utilizada frecuentemente. Se define como la
+                        raíz cuadrada del cuadrado medio.
+                        <br />
+                        <br />
+                        Se calcula como:
+                        <br />
+
+                        RMS = √
+                        <sup> &Sigma; (x<sub>i</sub>)<sup> 2</sup> </sup>
+                        / <sub>N</sub>
+                        <br />
+                        <br />
+
+                        Donde N es el n&uacute;mero de muestras (100).
+                      </h5>
+                    </div>
+                  </details>
+                </div>
+              </details>
+
+              <details class="faq-question-container" name="interpreto">
+                <summary class="faq-question-title">
+                  Qu&eacute; observo y c&oacute;mo interpreto la tabla?
+                </summary>
+                <div>
+                  <h5 class="faq-content">
+                    La tabla muestra el valor m&aacute;ximo obtenido en cada
+                    m&eacute;trica en un per&iacute;odo de tiempo de 3s.
+                    <br />
+                    <br />
+                    Se obtiene el valor tanto al realizar un movimiento como
+                    en reposo en ambos canales,
+                    de modo de poder comparar los resultados.
+                    <br />
+                    <br />
+                    Para calcular las m&eacute;tricas se utiliza una ventana
+                    m&oacute;vil de 100 muestras y se utilizan las ecuaciones
+                    que se pueden encontrar en la pestaña 'Que representan las
+                    variables?' de este mismo FAQ.
+                    <br />
+                    <br />
+                    En la columna Diferencia se muestra la diferencia en
+                    porcentaje del m&aacute;ximo logrado realizando un
+                    movimiento y con el brazo relajado para cada canal.
+                    <br />
+                    <br />
+                    Se busca que esta diferencia sea lo mas grande posible en un
+                    canal y bajo en el otro.
+                    <br />
+                    <br />
+                    Como ayuda, si el porcentaje es mayor al 600% el cuadrante
+                    se pondr&aacute; en verde.
+                  </h5>
+                </div>
+              </details>
+              <details class="faq-question-container" name="SCORE">
+                <summary class="faq-question-title">
+                  Como se calcula el Score?
+                </summary>
+                <div>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">
+                      Paso 1: Tomar referencias
+                    </summary>
+                    <h5 class="faq-content">
+                      El primer paso para calcular el Score es realizar el
+                      movimiento deseado, esto nos dará un valor de referencia
+                      para cada una de las métricas. (Columna Máximo movimiento
+                      en la tabla)
+                    </h5>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">
+                      Paso 2: Calculo Score por métrica.
+                    </summary>
+                    <h5 class="faq-content">
+                      Al volver a tomar datos, se vuelve a calcular el valor de
+                      cada métrica y se comparara el valor obtenido con la
+                      referencia, utilizando la siguiente ecuación,
+                      ejemplificando para el caso del MAV.
+                      <br />
+                      <br />
+                      ScoreMAV = 
+                      <sup
+                        >
+                        MAV<sub>obtenido</sub></sup
+                      >/<sub>MAV<sub>referencia</sub></sub>
+                      <br />
+                      <br />
+                      A su vez, se limita el puntaje entre 0 y 1, asignando un
+                      valor de 1 en el caso de que el MAV<sub>obtenido</sub> sea
+                      mayor que el MAV<sub>referencia</sub>.
+                    </h5>
+                  </details>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">
+                      Paso 3: Asignar pesos
+                    </summary>
+                    <h5 class="faq-content">
+                      El último paso es asignarle un peso a las distintas
+                      métricas. La ecuación completa para un canal es la
+                      siguiente.
+                      <br />
+                      <br />
+                      Score = Canal * (a * ScoreMAV + b * ScoreSTD + c *
+                      ScoreDiff + d * ScoreDAMV + e * ScoreRMS)
+                      <br />
+                      <br />
+                      Donde a,b,c,d y e representan el peso que se le quiere dar
+                      a cada m&eacute;trica. Canal hace referencia al canal que
+                      se desea utilizar.
+                      <br />
+                      <br />
+                      La suma de los pesos debe cumplir con la siguiente
+                      condici&oacute;n:
+                      <br />
+                      <br />
+                      a + b + c + d + e = 100
+                      <br />
+                      De esta forma, el Score estará siempre entre 0 y 100.
+                    </h5>
+                  </details>
+                </div>
+              </details>
+              <details class="faq-question-container" name="Correcto">
+                <summary class="faq-question-title">
+                  C&oacute;mo se si la ecuaci&oacute;n obtenida es la correcta?
+                </summary>
+                <div>
+                  <h5 class="faq-content">
+                    Se recomiendan hacer las siguientes pruebas:
+                    <br />
+                    <br />
+
+                    1. Puntaje en relajacion: Deje la mano quieta y verifique
+                    que el puntaje sea bajo (menor a 20).
+                    <br />
+                    <br />
+                    2. Puntaje en movimiento deseado: Realice el movimiento
+                    deseado y verifique que el puntaje supere el umbral.
+                    <br />
+                    <br />
+                    3. Puntaje en otros movimientos: Realice otros movimientos
+                    con la mano (Ejemplo: extensión de muñeca) y verifique que
+                    el puntaje no supere el umbral.
+                  </h5>
+                </div>
+              </details>
+              <details class="faq-question-container" name="ERRORES">
+                <summary class="faq-question-title">Errores Comunes</summary>
+                <div>
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">
+                      Cable de linea conectado
+                    </summary>
+                    <div>
+                      <h5 class="faq-content">
+                        Asegurese de tener el cable de linea (el cargador) de la
+                        computadora desconectado.
+                        <br />
+                        <br />
+                        Esto traerá ruido no deseado que tendrá un impacto
+                        directo a la hora de calcular el Score.
+                      </h5>
+                    </div>
+                  </details>
+
+                  <details class="faq-question-container">
+                    <summary class="faq-question-title2">
+                      Referencias mal tomadas - error toma de datos
+                    </summary>
+                    <div>
+                      <h5 class="faq-content">
+                        Es muy importante que la toma de datos al realizar el
+                        movimiento sea buena.
+                        <br />
+                        <br />
+                        De no ser así, las referencias no se tomarán de manera
+                        correcta y el Score no se calculará bien.
+                      </h5>
+                    </div>
+                  </details>
+                </div>
+              </details>
+
+              <div>
+                <button
+                  onclick="closeForm()"
+                  style="
+                    width: 100%;
+                    font-size: 15px;
+                    margin: 15px 0;
+                    background-color: transparent;
+                    border: none;
+                    color: #0645ad;
+                  "
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+
+            <!-- Fin FAQ -->
+          </div>
+        </div>
+
+        <!-- Esto es para la parte del cuadro que me deja poner los pesos (arranca no visible) -->
+        <div class="flex23" id="CuadroResultados">
+          <div class="flexScroll">
+            <div class="flex-cuadro-texto1">
+              <p class="Estadisticos">MAV</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="MAV"
+                  name="MAV"
+                  value="100"
+                />
+              </div>
+              <p class="Estadisticos">DIF</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="DIF"
+                  name="DIF"
+                  value="0"
+                />
+              </div>
+              <p class="pRes">Resultado</p>
+            </div>
+
+            <div class="flex-cuadro-texto1">
+              <p class="Estadisticos">DAMV</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="DAMV"
+                  name="DAMV"
+                  value="0"
+                />
+              </div>
+              <p class="Estadisticos">STD</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="STD"
+                  name="STD"
+                  value="0"
+                />
+              </div>
+              <p class="pScore">Score:</p>
+              <p class="p2" name="cuadroScore" id="cuadroScore"></p>
+            </div>
+
+            <div class="flex-cuadro-texto1">
+              <p class="Estadisticos">RMS</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="RMS"
+                  name="RMS"
+                  value="0"
+                />
+              </div>
+              <p class="Estadisticos">Umbral</p>
+              <div>
+                <input
+                  class="CuadroTexto"
+                  type="text"
+                  id="Umbral"
+                  name="Umbral"
+                  value="50"
+                />
+              </div>
+              <p class="pScore">Umbral:</p>
+              <p class="p2" id="cuadroUmbral"></p>
+            </div>
+
+            <div class="flex-cuadro-texto1">
+              <p class="PCanal">Seleccione canal </p>
+              <div class= "DivCanal12">
+                <p class="PCanal1"> 1 </p>
+                <input type="radio" name="radio" id="canal1" name="canal1" checked /> 
+              </div>
+              <div class= "DivCanal12">
+                <p class="PCanal2"> 2 </p>
+                <input type="radio" name="radio" id="canal2" name="canal2" /> 
+              </div>
+              <p class="pScore">Decisi&oacute;n:</p>
+              <p class="p2" id="cuadroDecision"></p>
+            </div>
+          </div>
+
+          <div class="flexdosbotones">
+            <button class="Botones" onclick="PruebaEc()">Probar ecuaci&oacute;n</button>
+          </div>
+        </div>
+      </div>
+      <!-- Botones para continuar-->
+      <div class="Contenedor-botones-finales">
+        <a href="/EntrenamientoMano ">
+          <button class="Botones">Volver a entrenamiento mano</button>
+        </a>
+
+        <a href="/testeo">
+          <button class="Botones" onclick="Continuar()" >Continuar a Evaluacion</button>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

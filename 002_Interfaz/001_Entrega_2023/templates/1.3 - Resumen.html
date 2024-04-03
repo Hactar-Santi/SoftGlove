@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+
+
+
+    <title>Resumen</title>
+
+    <script>
+
+      function inicio(){
+        /* AM = apertura mano ; CM = Cierre mano ; MM = movimiento muneca ; MC = mov conjunto*/
+        AM_AM = AM_CM = AM_MM = AM_MC = CM_AM = CM_CM = CM_MM = CM_MC  = 0
+              MM_AM = MM_CM = MM_MM = MM_MC = MC_AM = MC_CM = MC_MM = MC_MC  = 0
+
+              predicciones = JSON.parse(localStorage.getItem("Predicciones"));
+
+              for (i=0;i<=predicciones.length - 1;i++){
+                if (predicciones[i][0] == 'AM'){
+                  if(predicciones[i][1] == 'AM'){
+                    AM_AM += 1 
+                  } else if(predicciones[i][1] == 'CM'){
+                    AM_CM += 1
+                  }else if(predicciones[i][1] == 'MM'){
+                    AM_MM += 1
+                  }else if(predicciones[i][1] == 'MC'){
+                    AM_MC += 1
+                  }
+                }
+                if (predicciones[i][0] == 'CM'){
+                  if(predicciones[i][1] == 'AM'){
+                    CM_AM += 1 
+                  } else if(predicciones[i][1] == 'CM'){
+                    CM_CM += 1
+                  }else if(predicciones[i][1] == 'MM'){
+                    CM_MM += 1
+                  }else if(predicciones[i][1] == 'MC'){
+                    CM_MC += 1
+                  }
+                }
+                if (predicciones[i][0] == 'MM'){
+                  if(predicciones[i][1] == 'AM'){
+                    MM_AM += 1 
+                  } else if(predicciones[i][1] == 'CM'){
+                    MM_CM += 1
+                  }else if(predicciones[i][1] == 'MM'){
+                    MM_MM += 1
+                  }else if(predicciones[i][1] == 'MC'){
+                    MM_MC += 1
+                  }
+                }
+                if (predicciones[i][0] == 'MC'){
+                  if(predicciones[i][1] == 'AM'){
+                    MC_AM += 1 
+                  } else if(predicciones[i][1] == 'CM'){
+                    MC_CM += 1
+                  }else if(predicciones[i][1] == 'MM'){
+                    MC_MM += 1
+                  }else if(predicciones[i][1] == 'MC'){
+                    MC_MC += 1
+                  }
+                }
+              }
+              Matriz = [[AM_AM,AM_CM,AM_MM,AM_MC],
+              [CM_AM,CM_CM,CM_MM,CM_MC],
+              [MM_AM,MM_CM,MM_MM,MM_MC],
+              [MC_AM,MC_CM,MC_MM,MC_MC]]
+
+
+              $("#AM_AM").text(AM_AM);
+              $("#AM_CM").text(AM_CM);
+              $("#AM_MM").text(AM_MM);
+              $("#AM_MC").text(AM_MC);
+
+              $("#CM_AM").text(CM_AM);
+              $("#CM_CM").text(CM_CM);
+              $("#CM_MM").text(CM_MM);
+              $("#CM_MC").text(CM_MC);
+              
+              $("#MM_AM").text(MM_AM);
+              $("#MM_CM").text(MM_CM);
+              $("#MM_MM").text(MM_MM);
+              $("#MM_MC").text(MM_MC);
+
+              $("#MC_AM").text(MC_AM);
+              $("#MC_CM").text(MC_CM);
+              $("#MC_MM").text(MC_MM);
+              $("#MC_MC").text(MC_MC);
+      }
+
+      $(function () {
+        /* el a#process me llama a mi boton*/
+        $("a#process_input").bind("click", function () {
+          /*llamo a la funcion de python */
+            
+            
+              movimiento = document.getElementById("browser").value;
+
+              if(movimiento == 'Apertura mano'){
+                a = 0 , b = 1 , c = 2 , d = 3
+              } else if(movimiento == 'Cierre mano'){
+                a = 1 , b = 0 , c = 2 , d = 3
+              }else if(movimiento == 'Movimiento muneca'){
+                a = 2 , b = 0 , c = 1 , d = 3
+              }else if(movimiento == 'Movimiento conjunto'){
+                a = 3 , b = 0 , c = 1 , d = 2
+              }
+              vp = Matriz[a][a]
+              fp = Matriz[a][b] + Matriz[a][c] + Matriz[a][d] 
+              fn = Matriz[b][a] + Matriz[c][a] + Matriz[d][a]
+              vn = predicciones.length - vp - fp - fn 
+
+              if (vp + fn == 0){
+                $("#Sensibilidad").text('No hay datos suficientes');
+
+              } else {
+                sensibilidad = (vp/(vp+fn))
+                sensibilidad = sensibilidad.toFixed(3)
+                $("#Sensibilidad").text(sensibilidad);
+              }
+              
+              if (vn + fp == 0){
+                $("#Especificidad").text('No hay datos suficientes');
+              } else{
+                especificidad = (vn/(vn+fp))
+                especificidad = especificidad.toFixed(3)
+                $("#Especificidad").text(especificidad);
+              }
+              
+              if (vp + fp == 0){
+                $("#VPP").text('No hay datos suficientes');
+              } else{
+                vpp = (vp/(vp+fp))
+                vpp = vpp.toFixed(3)
+                $("#VPP").text(vpp);
+              }
+
+
+              if (vn + fn == 0){
+                $("#VPN").text('No hay datos suficientes');
+              } else{
+                vpn = (vn/(vn+fn))
+                vpn = vpn.toFixed(3)
+                $("#VPN").text(vpn);
+              }
+            
+        });
+      });
+
+      function Finalizar() {
+          /*llamo a la funcion de python */
+
+
+
+
+
+          RefMano = JSON.parse(localStorage.getItem("ParamRefMano"));
+          ParMano = JSON.parse(localStorage.getItem("ScoreMano"));
+          RefMun = JSON.parse(localStorage.getItem("ParamRefMun"));
+          ParMun = JSON.parse(localStorage.getItem("ScoreMun"));
+
+
+
+
+ 
+          $.getJSON(
+            "/_Guardar1",
+            {
+              /*creo la variable para pasarle a python */
+
+              canal1Mano: ParMano[0],
+              canal2Mano: ParMano[1],
+
+              aMano: ParMano[2],
+              bMano: ParMano[3],
+              cMano: ParMano[4],
+              dMano: ParMano[5],
+              eMano: ParMano[6],
+
+              UmbralMano: ParMano[7],
+
+              MAVref1Mano: RefMano[0],
+              MAVref2Mano: RefMano[1],
+
+              DIFref1Mano: RefMano[2],
+              DIFref2Mano: RefMano[3],
+
+              DAMVref1Mano: RefMano[4],
+              DAMVref2Mano: RefMano[5],
+
+              STDref1Mano: RefMano[6],
+              STDref2Mano: RefMano[7],
+
+              RMSref1Mano: RefMano[8],
+              RMSref2Mano: RefMano[9],
+
+              canal1Mun: ParMun[0],
+              canal2Mun: ParMun[1],
+
+              aMun: ParMun[2],
+              bMun: ParMun[3],
+              cMun: ParMun[4],
+              dMun: ParMun[5],
+              eMun: ParMun[6],
+
+              UmbralMun: ParMun[7],
+
+              MAVref1Mun: RefMun[0],
+              MAVref2Mun: RefMun[1],
+
+              DIFref1Mun: RefMun[2],
+              DIFref2Mun: RefMun[3],
+
+              DAMVref1Mun: RefMun[4],
+              DAMVref2Mun: RefMun[5],
+
+              STDref1Mun: RefMun[6],
+              STDref2Mun: RefMun[7],
+
+              RMSref1Mun: RefMun[8],
+              RMSref2Mun: RefMun[9],
+
+            },
+            function (data) {
+              /* esto es lo que me devuelve*/
+
+            }
+          );
+          alert('Calibracion finalizada, enviando parametros')
+          return false;
+        }      
+
+        function openForm() {
+        document.getElementById("FAQ").style.display = "block";
+        document.getElementById("FAQ").style.animation = "fadeIn 1s";
+      }
+
+      function closeForm() {
+        document.getElementById("FAQ").style.display = "none";
+        document.getElementById("FAQ").style.animation = "fadeOut 1s";
+      }
+    </script>
+
+
+
+    <style>
+     body {
+        background-color: black;
+        font-family: Arial, sans-serif;
+        font-size: 2vh;
+
+      }
+
+      .Titulo {
+        text-align: center;
+        font-size: 6vh;
+        color: white;
+        border: 1px solid white;
+        margin-left: 30vh;
+        margin-right: 30vh;
+
+      }
+      .flex-container {
+        display: flex;
+        flex-flow: column;
+        align-content: space-between;
+        justify-content: space-between;
+        height: 97vh;
+        border: 1px solid white;
+      }
+
+      .flex-container-botones-finales {
+        display: flex;
+        justify-content: space-between;
+        align-content: space-between;
+        margin: 10px;
+      }
+
+      .flex2 {
+        display: flex;
+        flex-flow: column;
+        padding: 1vh;
+        border: 2px solid white;
+        align-items: space-around;
+        justify-content: space-around;
+        margin: 1vh;
+        height: 27.5vh;
+      }
+      
+      .flex-cuadro-texto {
+        display: flex;
+        flex-flow: row;
+        height: 45px;
+        padding: 1px;
+        border: 1px solid white;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+
+      p {
+        justify-content: center;
+        text-align: center;
+      }
+
+    
+
+      .flex1 {
+        display: flex;
+        flex-flow: row;
+        padding: 10px;
+        margin: 2px;
+        align-items: space-around;
+        justify-content: center;
+
+      }
+
+      .flex3 {
+        display: flex;
+        flex-flow: row;
+        padding: 1px;
+        margin: 1px;
+        align-items: space-around;
+        justify-content: space-around;
+      }
+
+      .flexseleccion {
+        border: 1px solid white;
+        background-color: black;
+        padding: 2px;
+        width: 80vh;
+      }
+
+      .Texto{
+        width: 165vh;
+        height: 25vh;
+      }
+
+      table.greyGridTable {
+        border: 2px solid white;
+        width: 80vh;
+        text-align: center;
+        border-collapse: collapse;
+        height: 30vh;
+        margin: 1vh;
+      }
+      table.greyGridTable td {
+        border: 1px solid white;
+        width: 12vh;
+        padding: 1px 2px;
+        font-family: Arial, sans-serif;
+      }
+      table.greyGridTable th {
+        border: 1px solid white;
+        padding: 1px 2px;
+        font-family: Arial, sans-serif;
+        color: white;
+
+      }
+      table.greyGridTable tbody td {
+        font-size: 2vh;
+        color: white;
+
+      }
+      table.greyGridTable tr {
+        background: black;
+        color: white;
+
+      }
+      table.greyGridTable thead {
+        background: black;
+        color: white;
+
+        border-bottom: 2px solid white;
+      }
+      table.greyGridTable thead th {
+        font-size: 2vh;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        border-left: 1px solid white;
+      }
+      table.greyGridTable thead th:first-child {
+        border-left: none;
+      }
+
+      table.greyGridTable tfoot td {
+        font-size: 2vh;
+      }
+
+      .Texto {
+        font-size: 2vh;
+        resize: none;
+        margin: 0.5vh;
+        border: 1px solid white;
+        padding: 1vh;
+        color: white;
+        background-color: black;
+      }
+
+      .SEVV{
+        color: white;
+        background-color: black;
+        width: 30vh;
+      }
+      /* Full-width input fields */
+
+      /* When the inputs get focus, do something */
+
+      /* Set a style for the submit/login button */
+      .form-popup {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        right: 15px;
+        border: 3px solid #f1f1f1;
+        z-index: 9;
+      }
+
+      /* Add styles to the form container */
+      .form-container {
+        max-width: 300px;
+        padding: 10px;
+        background-color: white;
+        
+
+      }
+
+      /* Full-width input fields */
+
+      /* When the inputs get focus, do something */
+
+      /* Set a style for the submit/login button */
+      .form-container .btn {
+        background-color: #04aa6d;
+        color: white;
+        padding: 16px 20px;
+        border: none;
+        cursor: pointer;
+        width: 100%;
+        opacity: 0.8;
+      }
+
+      /* Add a red background color to the cancel button */
+      .form-container .cancel {
+        background-color: red;
+      }
+
+      .faq-container {
+        max-height: 100%;
+        overflow: auto;
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        width: 400px;
+        bottom: 15px;
+        right: 15px;
+        border-radius: 8px;
+        border: 1px solid black;
+      }
+
+      .faq-title-container {
+        display: flex;
+        justify-content: center;
+      }
+
+      .faq-title {
+        font-size: 25px;
+        margin: 15px 0px;
+      }
+
+      .faq-content {
+        font-weight: normal;
+        font-style: Arial;
+        border: 1px dotted black;
+        margin-top: 2px;
+        margin-bottom: 2px;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      .faq-question-container {
+        margin: 10px 5px;
+      }
+
+      .faq-question-title {
+        /* list-style: none;*/
+        font-weight: bold;
+        font-size: 13px;
+      }
+
+      .faq-question-title2 {
+        /* list-style: none;*/
+        font-size: 13px;
+        margin-left: 5px;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .browser{
+        width: 66vh;
+        background-color: black;
+        border: 1px solid white;
+        color: white;
+        border-radius: 10px;
+
+      }
+
+      .Botones{
+        margin: 0.5vh;
+
+        font-size: 2vh;
+        align-items: space-around;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+      }
+
+      .flex-info{
+        height: 30vh;
+      }
+
+      .Prueba{
+        color: white;
+        padding: 2vh;
+
+      }
+    </style>
+  </head>
+  <body onload="inicio()">
+    
+    <div class="flex-container" id='negro'>
+      <h1 class="Titulo">
+        Resumen
+      </h1>
+      <div class="flex1">
+                              <!-- Parte arriba a la izquierda con Sensibilidad, etc... -->
+
+        <div class="flex2">
+          <div class="flexseleccion">
+            <label class="SEVV" for="browser"></label>
+            <input list="browsers" class="browser" name="browser" id="browser" placeholder="Seleccione tipo de movimiento:">
+            <datalist id="browsers">
+              <option value="Apertura mano">
+              <option value="Cierre mano">
+              <option value="Movimiento muneca">
+              <option value="Movimiento conjunto">
+            </datalist>
+          <a href="#" id="process_input"><button class="Botones">OK</button></a>          
+          <button class="Botones" class="open-button" onclick="openForm()">FAQ</button>
+
+        </div>
+          <div class="flex-cuadro-texto">
+            <div class="SEVV">Sensibilidad</div>
+            <div><p class="Prueba" id="Sensibilidad" nombre='Sensibilidad'></p></div>
+          </div>
+          <div class="flex-cuadro-texto">
+            <div class="SEVV">Especifidad</div>
+            <div><p class="Prueba" id="Especificidad" nombre='Especificidad'></p></div>
+          </div>
+          <div class="flex-cuadro-texto">
+            <div class="SEVV">VPP</div>
+            <div><p class="Prueba" id="VPP" nombre='VPP'></p></div>
+          </div>
+          <div class="flex-cuadro-texto">
+            <div class="SEVV">VPN</div>
+            <div><p class="Prueba" id="VPN" nombre='VPN'></p></div>
+          </div>
+        </div>
+
+                                      <!-- Aca va todo la tabla -->
+
+        <div class="flex-info">
+          <table class="greyGridTable">
+            <thead>
+              <tr>
+                <th> </th>
+                <th>Apertura mano</th>
+                <th>Cierre mano</th>
+                <th>Movimiento muñeca</th>
+                <th>Movimiento conjunto</th>
+            </thead>
+            <tbody>
+              <tr>
+                <th>Apertura mano</th>
+                <td id='AM_AM' name='AM_AM'>  </td>
+                <td id="AM_CM" name='AM_CM'> </td>
+                <td id="AM_MM" name='AM_MM'> </td>
+                <td id="AM_MC" name='AM_MC'> </td>
+              </tr>
+
+              <tr>
+                <th>Cierre mano</th>
+                  <td id='CM_AM' name='CM_AM'>  </td>
+                  <td id="CM_CM" name='CM_CM'> </td>
+                  <td id="CM_MM" name='CM_MM'> </td>
+                  <td id="CM_MC" name='CM_MC'> </td>
+              </tr>
+
+              
+
+              <tr>
+                <th>Movimiento muñeca</th>
+                  <td id='MM_AM' name='MM_AM'>  </td>
+                  <td id="MM_CM" name='MM_CM'> </td>
+                  <td id="MM_MM" name='MM_MM'> </td>
+                  <td id="MM_MC" name='MM_MC'> </td>
+              </tr>
+
+              <tr>
+                <th>Movimiento conjunto</th>
+                  <td id='MC_AM' name='MC_AM'>  </td>
+                  <td id="MC_CM" name='MC_CM'> </td>
+                  <td id="MC_MM" name='MC_MM'> </td>
+                  <td id="MC_MC" name='MC_MC'> </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        </div>
+
+        <div class="flex3">
+                            <!-- Parte de abajo con el textarea -->
+
+        <textarea class="Texto" rows="5" cols="70" disabled="true" id="Texto">
+En esta pantalla se resumen los resultados obtenidos en la pantalla de evaluaci&oacute;n.
+
+En la tabla de la derecha se encuentra la matriz de confusi&oacute;n obtenida y a la izquierda las distintas m&eacute;tricas obtenidas. Para poder visualizar las m&eacute;tricas debe seleccionar el tipo de movimiento deseado en la lista desplegable.
+
+Si desea mas informaci&oacute;n puede consultar el FAQ.
+
+Presione finalizar para terminar con la calibraci&oacute;n y pasar los par&aacute;metros necesarios a la caja de control para continuar con el entrenamiento.
+          </textarea>
+        </div>
+        <div class="flex-container-botones-finales">
+          <a href="/testeo">
+            <button class="Botones">Volver</button>
+          </a>
+  
+            <button class="Botones" onclick="Finalizar()">Finalizar</button>
+          
+        </div>
+      </div>
+       <!-- Comienzo FAQ -->
+       <div class="faq-container" id="FAQ">
+        <div class="faq-title-container">
+          <h1 class="faq-title">FAQ</h1>
+        </div>
+        <hr style="margin: 0" />
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; es la matriz de confusi&oacute;n?</summary>
+          <div>
+            <h5 class="faq-content">
+              La matriz de confusión es una matriz o tabla que proporciona información sobre la precisión de un algoritmo de clasificación para clasificar un conjunto de datos.
+              Entonces, una matriz de confusión es un método para evaluar el desempeño de un algoritmo de clasificación.
+              Cada columna columna de la matriz representa el número de predicciones de cada clase, mientras que cada fila 
+              representa el valor real. 
+            </h5>
+          </div>
+        </details>
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; informaci&oacute;n podemos obtener de la matriz?</summary>
+          <div>
+            <h5 class="faq-content">
+              Verdadero Positivo (TP): Se predice un valor positivo y se obtiene un resultado positivo.<br>
+              Verdadero Negativo (TN): Se predice un valor positivo y se obtiene un resultado negativo. <br>
+              Falso positivo (FP): Se predice un valor negativo y se obtiene un resultado positivo. <br>
+              Falso Negativo (FN): Se predice un valor negativo y se obtiene un resultado negativo.
+            </h5>
+          </div>
+        </details>
+       
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; es la sensibilidad?</summary>
+          <div>
+            <h5 class="faq-content">
+              La sensibilidad o tasa de verdaderos positivos (TPR) son los resultados positivos correctamente encontrados entre todos los resultados que podrían haber sido positivos.
+              <br>
+              Es una medida de qué tan bien su clasificador está identificando los valores positivos.
+              <br>
+              <br>
+              Se calcula como: 
+              Sen = TP/(TP+FN)
+            </h5>
+          </div>
+        </details>
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; es la especificidad?</summary>
+          <div>
+            <h5 class="faq-content">
+              La especificidad o tasa de verdaderos negativos (TNR) son los resultados negativos correctamente encontrados entre todos los resultados que podrían haber sido negativos.
+              <br>
+              Es una medida de qué tan bien su clasificador está identificando los valores negativos.
+
+              <br>
+              <br>
+              Se calcula como: 
+              Esp = TN/(TN+FP)
+            </h5>
+          </div>
+        </details>
+        
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; es el VPP?</summary>
+          <div>
+            <h5 class="faq-content">
+              El valor predictivo positivo (VPP) o precisión es el número de predicciones positivas correctas del número total de predicciones positivas.
+
+              <br>
+              <br>
+              Se calcula como: 
+              VPP =  (TP )/(TP + FP)
+            </h5>
+          </div>
+        </details>
+
+        <details class="faq-question-container">
+          <summary class="faq-question-title">Qu&eacute; es el VPN?</summary>
+          <div>
+            <h5 class="faq-content">
+              El valor predictivo negativo (VPN) es el número de predicciones negativas correctas del número total de predicciones negativas.
+
+              <br>
+              <br>
+              Se calcula como: 
+              VPN =  (TN )/(TN + FN)
+            </h5>
+          </div>
+        </details>
+
+        <div>
+          <button class="Botones"
+            onclick="closeForm()"
+            style="
+              width: 100%;
+              font-size: 15px;
+              margin: 10px 0;
+              background-color: transparent;
+              border: none;
+              color: #0645ad;
+            "
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Fin FAQ -->
+    </div>
+  </body>
+</html>

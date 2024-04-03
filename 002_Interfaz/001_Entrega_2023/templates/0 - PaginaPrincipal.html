@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pantalla de inicio</title>
+    <script>
+      var numero = 0;
+      function func1() {
+        document.getElementById("Texto").innerHTML =
+          "El primer paso ser&aacute; encontrar la ecuaci&oacute;n que mejor se acomode a su caso, esto se realiza en la pantalla Entrenamiento.\n \nEl siguiente paso ser&aacute; evaluar el funcionamiento de esta ecuaci&oacute;n, esto se realiza en la pantalla Evaluaci&oacute;n. \n \nFinalmente, se mostrar&aacute; un resumen de los datos y se cargar&aacute;n los par&aacute;metros en la caja de control para que usted pueda continuar con el entrenamiento personalizado.";
+        document.getElementById("Opciones").style.visibility = "hidden";
+        document.getElementById("Opciones").style.width = "0vh";
+        document.getElementById("Texto").style.width = "122vh";
+        document.getElementById("Opciones").style.marginRight = "0vh";
+
+
+      }
+
+      function func2() {
+        document.getElementById("Texto").innerHTML =
+          "Tiene 2 opciones de entrenamiento:\n \n  1. Un canal y un movimiento (un sensor de EMG y extensi&oacute;n de muñeca y/o de los dedos).\n \n  2. Dos canales y dos movimientos(extensi&oacute;n de muñeca y cierre de mano).\n \nSeleccione la opci&oacute;n que desee para continuar.";
+        document.getElementById("Opciones").style.visibility = "visible";
+        document.getElementById("Opciones").style.width = "15vh";
+        document.getElementById("Texto").style.width = "95vh";
+        document.getElementById("Opciones").style.marginRight = "12vh";
+
+
+
+      }
+
+      function Seguir() {
+        numero += 1;
+        if (numero > 3) {
+          numero = 2;
+        }
+        SelecFun(numero);
+      }
+
+      function Volver() {
+        numero -= 1;
+        if (numero < 1) {
+          numero = 0;
+          document.getElementById("Texto").innerHTML =
+            "Bienvenido a la aplicaci&oacute;n. \n \nEl objetivo de esta aplicaci&oacute;n es calibrar la se&ntilde;al de EMG para su caso, buscando eliminar la variaci&oacute;n interpersonal que esta posee.\n \nPresione seguir para continuar.";
+        }
+        SelecFun(numero);
+      }
+
+      function SelecFun() {
+        switch (numero) {
+          case 1:
+            func1();
+            break;
+          case 2:
+            func2();
+            break;
+          case 3:
+            func3();
+            break;
+          case 4:
+            func4();
+            break;
+          case 5:
+            func5();
+            break;
+        }
+      }
+
+      localStorage.removeItem("Predicciones");
+    </script>
+    <style>
+      body {
+        background-color: black;
+        font-family: Arial, sans-serif;
+      }
+
+      .Titulo {
+        text-align: center;
+        font-size: 8vh;
+        color: white;
+        border: 1px solid white;
+        margin-left: 30vh;
+        margin-right: 30vh;
+        
+
+      }
+
+      .Contenedor {
+        display: flex;
+        flex-flow: column;
+        height: 97vh;
+        border: 1px solid white;
+      }
+
+      .Contenedor-1 {
+        display: flex;
+        flex-flow: row;
+        justify-content: center;
+
+
+
+      }
+
+      .Contenedor-2 {
+        display: flex;
+        flex-flow: column;
+
+
+
+
+      }
+
+      .Cuadro_Texto {
+        display: flex;
+        flex-flow: column;
+        
+
+      }
+      .Boton-Opciones {
+        display: flex;
+        flex-flow: column;
+        width: 0vh;
+        visibility: collapse;
+      }
+      .flexdosbotones {
+        display: flex;
+        flex-flow: row;
+        margin-top: 1vh;
+        border: 1px solid white;
+        width: 19vh;
+
+
+      }
+
+      .opciones {
+        width: 27vh;
+        height: 15.07vh;
+        font-size: 2.5 vh;
+        align-items: space-around;
+        border: 1px solid white;
+        color: white;
+        background-color: black;
+
+      }
+
+      .opcion {
+        font-size: 2.5vh;
+        margin-right: 3vh;
+        border: 1px solid white;
+        margin: 0.5vh;
+        color: white;
+        background-color: black;
+
+      }
+
+      .Texto {
+        font-size: 2.5vh;
+        resize: none;
+        width: 122vh;
+        height: 28vh;
+        border: 1px solid white;
+        padding: 1vh;
+        color: white;
+        background-color: black;
+
+      }
+
+      h1{
+        font-family: Arial, sans-serif;
+        font-size: 2.5 vh;
+        font-weight: normal;
+
+      }
+    </style>
+
+    
+  </head>
+
+  <body>
+    <div class="Contenedor">
+      <h1 class="Titulo">
+        Modo asistido - Calibraci&oacute;n
+      </h1>
+      <!-- General -->
+
+      <div class="Contenedor-1">
+        <!-- Cuadro texto + boton seguir -->
+
+        <div class="Contenedor-2">
+          <!-- Cuadro de texto -->
+
+          <div class="Cuadro_Texto">
+            <textarea
+              class="Texto"
+              disabled="false"
+              id="Texto"
+            >
+Bienvenido a la aplicaci&oacute;n.
+
+El objetivo de esta aplicaci&oacute;n es calibrar la se&ntilde;al de EMG para su caso, buscando eliminar la variaci&oacute;n interpersonal que esta posee.
+
+Presione seguir para continuar.
+          </textarea
+            >
+          </div>
+
+          <!-- Boton seguir -->
+
+          <div class="flexdosbotones">
+            <button class="opcion" onClick="Volver()">Volver</button>
+            <button class="opcion" onClick="Seguir()">Seguir</button>
+          </div>
+        </div>
+        <div class="Boton-Opciones" id="Opciones">
+          <!-- Botones opciones-->
+          <div class="botones">
+            <a href="/EntMunSimple">
+              <button class="opciones" onClick="Calibracion()">
+                <h1>
+                  1 sensor <br> 
+                
+                  1 movimiento
+                </h1>
+                
+              </button>
+            </a>
+          </div>
+
+          <div>
+            <a href="/EntrenamientoMano">
+              <button class="opciones" onClick="Calibracion()">
+                <h1>
+                  2 sensores <br> 
+                
+                  2 movimientos
+                </h1>
+                
+              </button>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
